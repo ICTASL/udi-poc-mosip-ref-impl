@@ -1,0 +1,20 @@
+pipeline {
+    agent any
+	environment {
+		DOCKER_HUB = "udipoc"
+        //VERSION = "0.0.1-SNAPSHOT"  /** VERSION is set from the jenkins 'PreRegistrationUI-Deploy' job UI **/
+	}
+    tools {
+        nodejs 'node'
+    }
+
+    stages{
+        stage('Deploy-DockerImage'){
+            steps{
+                withDockerRegistry(credentialsId: DOCKER_HUB, url: '') {
+		          ansiblePlaybook credentialsId: 'dev_test_key', disableHostKeyChecking: true, extras:"-e VERSIONTAG=${VERSION}" , installation: 'ansible', inventory: '/home/uploads/dev.inv', playbook: '/home/uploads/deploy-pre-registration-ui.yml'
+		      }
+            }
+        }
+    }
+}
