@@ -9,7 +9,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "stats": "webpack-bundle-analyzer dist/pre-registration/stats.json"
+    "stats": "webpack-bundle-analyzer dist/pre-registration-ui/stats.json"
   },
   "private": true,
   "dependencies": {
