@@ -12,7 +12,7 @@ import LanguageFactory from "../../../assets/i18n";
 
 @Component({
   selector: "app-login",
-  templateUrl: "./login.component.html1",
+  templateUrl: "./login.component.html",
   styleUrls: ["./login.component.css"],
 })
 export class LoginComponent implements OnInit {
