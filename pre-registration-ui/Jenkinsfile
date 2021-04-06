@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+	environment {
+		DOCKER_HUB = "udipoc"
+        VERSION = "0.0.1-SNAPSHOT"
+	}
+    tools {
+        nodejs 'node'
+    }
+
+    stages{
+        stage('SCM Clone'){
+            steps{
+                git branch: '1.1.3-develop-cicd-viraj', url: 'https://github.com/ICTASL/udi-poc-mosip-ref-impl.git'
+            }
+        }
+        stage('Init'){
+            steps{
+                dir('pre-registration-ui') { 
+				    sh 'npm install'
+                }
+            }
+        }
+        stage('Build'){
+            steps{
+                dir('pre-registration-ui') { 
+				    sh "npm run ng build --prod --base-href --aot=false"
+                }
+			}
+        }
+        stage('SonarQube-Analysis'){
+            environment{
+                scannerHome = tool 'sonar_scanner'
+            }
+            steps{
+				    withSonarQubeEnv('sonarqube'){
+				        sh '${scannerHome}/bin/sonar-scanner'
+				    }
+				    
+				     timeout(time: 15, unit: 'MINUTES'){
+				         waitForQualityGate abortPipeline: true
+				     }
+                }
+        }
+        
+		stage('Build-DockerImage') {
+		  steps{
+			dir('pre-registration-ui') { 
+				sh 'docker build . -t ${DOCKER_HUB}/pre-registration-ui:${VERSION} '
+			}
+		  }
+		}
+		stage('Push-DockerImage') {
+		  steps {
+		      withDockerRegistry(credentialsId: "$DOCKER_HUB" , url: '') {
+		          sh 'docker push ${DOCKER_HUB}/pre-registration-ui:${VERSION}'
+		      }
+		  }
+        }
+		stage('Remove Unused docker image to free disk space') {
+		  steps{
+			dir('pre-registration-ui') {
+				sh 'docker rmi -f ${DOCKER_HUB}/pre-registration-ui:${VERSION}'
+			}
+		  }
+		}
+    }
+}
