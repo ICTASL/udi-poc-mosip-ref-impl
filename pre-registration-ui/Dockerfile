@@ -1,8 +1,8 @@
 FROM node:11.15.0-alpine
-WORKDIR /preregapp
-COPY package*.json /preregapp/
+WORKDIR /home/ec2-user/preregapp
+COPY package*.json /home/ec2-user/preregapp/
 RUN npm install
-COPY ./ /preregapp/
+COPY ./ /home/ec2-user/preregapp/
 RUN npm run ng build --prod --base-href --aot=false
 
 FROM nginx
