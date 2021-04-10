@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pre-registration-ui
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pre-registration-ui
+      version: 0.0.1-SNAPSHOT
+  template:
+    metadata:
+      name: pre-registration-ui-pod
+      labels:
+        app: pre-registration-ui
+        version: 0.0.1-SNAPSHOT
+    spec:
+      containers:
+        - name: pre-registration-ui
+          image: udipoc/pre-registration-ui:0.0.1-SNAPSHOT
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pre-registration-ui-svc
+  labels:
+    app: pre-registration-ui
+spec:
+  selector:
+    app: pre-registration-ui
+    version: 0.0.1-SNAPSHOT
+  type: NodePort
+  ports:
+    - nodePort: 31113
+      port: 80
+      targetPort: 80
