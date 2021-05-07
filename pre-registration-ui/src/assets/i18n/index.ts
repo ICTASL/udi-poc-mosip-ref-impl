@@ -1,6 +1,7 @@
 import ara from './ara.json';
 import fra from './fra.json';
 import eng from './eng.json';
+import sin from './sin.json';
 
 export default class LanguageFactory {
   currentLanguage: any;
@@ -14,6 +15,9 @@ export default class LanguageFactory {
         break;
       case 'eng':
         this.currentLanguage = eng;
+        break;
+      case 'sin':
+        this.currentLanguage = sin;
         break;
     }
   }

@@ -160,7 +160,8 @@ export const APPLICANT_TYPE_ATTRIBUTES = {
 export const virtual_keyboard_languages = {
   eng: 'en',
   fra: 'fr',
-  ara: 'ar'
+  ara: 'ar',
+  sin: 'si'
 };
 
 export const languageMapping = {
@@ -172,6 +173,9 @@ export const languageMapping = {
   },
   fra: {
     langName: 'Français'
+  },
+  sin: {
+    langName: 'Sinhala'
   }
 };
 
@@ -191,7 +195,7 @@ export const MONTHS = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug
 
 export const controlTypeGender = 'gender';
 export const controlTypeResidenceStatus = 'residenceStatus';
-export const TRANSLITERATE_FIELDS = ["fullName","addressLine1","addressLine2","addressLine3"];
+export const TRANSLITERATE_FIELDS = ["fullName","addressLine1","addressLine2","addressLine3","fatherName","parentOrGuardianName","spouseName"];
 
 export const errorMessages = {
   requiredMessage : {

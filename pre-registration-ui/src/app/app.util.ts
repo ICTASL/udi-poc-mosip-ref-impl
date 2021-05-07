@@ -3,6 +3,7 @@ import * as appConstants from './app.constants';
 import localeFr from '@angular/common/locales/fr';
 import localeAr from '@angular/common/locales/ar';
 import localeEn from '@angular/common/locales/en';
+import localeSi from '@angular/common/locales/si';
 
 export default class Utils {
   static getCurrentDate() {
@@ -29,6 +30,7 @@ export default class Utils {
     registerLocaleData(localeEn, appConstants.virtual_keyboard_languages.eng);
     registerLocaleData(localeAr, appConstants.virtual_keyboard_languages.ara);
     registerLocaleData(localeFr, appConstants.virtual_keyboard_languages.fra);
+    registerLocaleData(localeSi, appConstants.virtual_keyboard_languages.sin);
 
     const pipe = new DatePipe(appConstants.virtual_keyboard_languages[language]);
     const date = appointment_date.split('-');
