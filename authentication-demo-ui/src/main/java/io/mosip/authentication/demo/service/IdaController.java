@@ -14,14 +14,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
@@ -30,6 +23,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import com.fasterxml.jackson.databind.ObjectWriter;
+import io.mosip.authentication.demo.dto.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -61,13 +56,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.mosip.authentication.demo.dto.AuthRequestDTO;
-import io.mosip.authentication.demo.dto.AuthTypeDTO;
-import io.mosip.authentication.demo.dto.CryptomanagerRequestDto;
-import io.mosip.authentication.demo.dto.EncryptionRequestDto;
-import io.mosip.authentication.demo.dto.EncryptionResponseDto;
-import io.mosip.authentication.demo.dto.OtpRequestDTO;
-import io.mosip.authentication.demo.dto.RequestDTO;
 import io.mosip.authentication.demo.helper.CryptoUtility;
 import io.mosip.kernel.core.http.RequestWrapper;
 import io.mosip.kernel.core.util.CryptoUtil;
@@ -552,7 +540,7 @@ public class IdaController {
 		otpRequestDTO.setVersion("1.0");
 
 		try {
-			RestTemplate restTemplate = createTemplate();
+			RestTemplate restTemplate = createTemplateWithSignature(otpRequestDTO);
 			HttpEntity<OtpRequestDTO> httpEntity = new HttpEntity<>(otpRequestDTO);
 			ResponseEntity<Map> response = restTemplate.exchange(
 					env.getProperty("ida.otp.url"),
@@ -748,8 +736,29 @@ public class IdaController {
 				if (authToken != null && !authToken.isEmpty()) {
 					request.getHeaders().set("Cookie", "Authorization=" + authToken);
 					request.getHeaders().set("Authorization", "Authorization=" + authToken);
-					request.getHeaders().set("signature", "eyJ4NWMiOlsiTUlJRFpUQ0NBazJnQXdJQkFnSUVYVmp0VkRBTkJna3Foa2lHOXcwQkFRc0ZBREJqTVFzd0NRWURWUVFHRXdKSlRqRUxNQWtHQTFVRUNCTUNTMEV4RWpBUUJnTlZCQWNUQ1VKaGJtZGhiRzl5WlRFT01Bd0dBMVVFQ2hNRlNVbEpWRUl4RGpBTUJnTlZCQXNUQlUxUFUwbFFNUk13RVFZRFZRUUREQXBOVDFOSlVGOVVaWE4wTUI0WERUSXdNVEF4TXpBMU16a3pObG9YRFRJek1UQXhNekExTXprek5sb3dZekVMTUFrR0ExVUVCaE1DU1U0eEN6QUpCZ05WQkFnVEFrdEJNUkl3RUFZRFZRUUhFd2xDWVc1bllXeHZjbVV4RGpBTUJnTlZCQW9UQlVsSlNWUkNNUTR3REFZRFZRUUxFd1ZOVDFOSlVERVRNQkVHQTFVRUF3d0tUVTlUU1ZCZlZHVnpkRENDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFEZ2dFUEFEQ0NBUW9DZ2dFQkFQSzk3d25namw3V0Y3RURkcENncThXSVA5Z1JhVUZ6VFU4VElhZ1d3alVmRlFpUTV0Q0s2VTdkZ1hsMmZTR1VlVEh4U1p5WWNhZk0wM3hGcUJGQytsMzU5WDFEVUx0ZW9KRWZMZENUYkRxSUdYMWFpQTlNbkVHbTB3U1pFV3duMUVxYVhQYXpMNjVPL0tQN29paVFnZmxMTGhMSW1HT0l3MzF6UDd5UVFUeCtIc0ZmU1VsbXgrc1IrZGtkQkppdkdINng3b0ZRTi90VGJXaGxwVEFpVjBFVUlWamJGS2dsS2NZeG9oWVVnOEpYbzg3S1lHRndIeHlYbnpleTU5bG04d0JnWUZiRUhoeHh1bWt4aDlrdnp0ZUVEOGdkMWdseUVXcTR4UU1QNXY2cHBndlZ4VU5Pb2c0OXRJTlkybFFubEJkalNFb2d0elN2WnRmVmV6Qmp5UE1DQXdFQUFhTWhNQjh3SFFZRFZSME9CQllFRkZOb0pYMHRTRm9WeURZa2dyRFBZL1J6dktZbk1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQlNCM1ZLdjNvRHR1ZUZvc1Q2VEJhVytaSUlSaEMwbHdIeU90QThvcVA3c2p0Q2tLUU83MU1ESFlHbXB3WlpLUnV3QXZlbEJsdGRNa2FoNWEvbmUrYjBvK0E5Qk5vREZpSDA4cFg0Q0w5ZHJFOVZOSE5XcnQ2M0RhVGE1NEVvZG91OXZUd09lcTJlUmVQWmRsZllwSi9MdE9zTkdYbTloSkZhYzNZdlpWOTgxMmxESWdWL2JDc04xOE1GK3BmakU3UW5aMDJocDJJTWt5c1NqQXlUTktVQ25ORlcvY2NYb2tsdzgzNENPcHUrd2VaaXZmUzdYZ1VjclhTb1o0ZmxaTlZ0RTlDaXZOVUhuSXlRQUcwb0JyblZla2tLbDF2RGRFR2EyT21salhrRDlOenEwRXdVVllUWERJdGMxaThacFYyQVVaVHdBUWRieUFLNi81YjNCcVlRIl0sImFsZyI6IlJTNTEyIn0.aGVsbG8gd29ybGQ.WGsSyKwBxtzt2B_mBDAbdHr4g_x0IZSXPZ2RCjWjD5Rp9wImKMeqFx0Uex7mV3D0mIaraXVMr8_WrB9bQcWOHf6sOTFfwmmmu_SgFqO9U85de0YTJbNAogBgCxzoIIkGgnRDes3SpIyw361Qy-w4kZKBezvj6z53kQB50HmcaOAPpzcPZdQGP7B_a9a-YFLnViZeOb5Ki-dhc72qw0TDXp-7HwTGERDxnvCT07pQTSyxSpgow--HPxF2cPOnRSMJ14VcA0PuJkjb8ykpMYpapMzs2KDhsYApEx7PTORW3J3izehb3BNHb4tj91t_eDo1UPc_y6ryz3BaBM6qZycTkw");
-					
+				}
+				return execution.execute(request, body);
+			}
+		};
+
+		restTemplate.setInterceptors(Collections.singletonList(interceptor));
+		return restTemplate;
+	}
+
+	private RestTemplate createTemplateWithSignature(Object requestDTO) throws KeyManagementException, NoSuchAlgorithmException {
+		turnOffSslChecking();
+		RestTemplate restTemplate = new RestTemplate();
+		ClientHttpRequestInterceptor interceptor = new ClientHttpRequestInterceptor() {
+
+			@Override
+			public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+					throws IOException {
+				String authToken = generateAuthToken();
+				String signature = generateRequestSignature(requestDTO, authToken);
+				if (authToken != null && !authToken.isEmpty()) {
+					request.getHeaders().set("Cookie", "Authorization=" + authToken);
+					request.getHeaders().set("Authorization", "Authorization=" + authToken);
+					request.getHeaders().set("signature", signature);
 				}
 				return execution.execute(request, body);
 			}
@@ -862,4 +871,54 @@ public class IdaController {
 	private void onOtpValueUpdate() {
 		updateSendButton();
 	}
+
+	private String generateRequestSignature(Object requestDTO, String token) {
+		String encodedData ="";
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			String jsonStr = objectMapper.writeValueAsString(requestDTO);
+			encodedData = Base64.encodeBase64String(jsonStr.getBytes());
+		}
+		catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		JWTSignRequestDTO jwtRequest = new JWTSignRequestDTO();
+		JWTRequestDTO request = new JWTRequestDTO();
+		request.setApplicationId("IDA");
+		request.setCertificateUrl("string");
+		request.setDataToSign(encodedData);
+		request.setIncludeCertHash(true);
+		request.setIncludeCertificate(true);
+		request.setIncludePayload(false);
+		request.setReferenceId("SIGN");
+		jwtRequest.setId("string");
+		jwtRequest.setMetadata(null);
+		jwtRequest.setVersion("v1");
+		jwtRequest.setRequestTime(getUTCCurrentDateTimeISOString());
+		jwtRequest.setRequest(request);
+
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.add("Cookie", "Authorization="+token);
+		HttpEntity<JWTSignRequestDTO> httpEntity = new HttpEntity<>(jwtRequest, headers);
+		ResponseEntity<Map> response = restTemplate.exchange(
+				env.getProperty("ida.jwtsign.url"),
+				HttpMethod.POST, httpEntity, Map.class);
+		System.err.println(response);
+		if (response.getStatusCode().is2xxSuccessful()) {
+			List errors = ((List) response.getBody().get("errors"));
+			boolean status = errors == null || errors.isEmpty();
+			if (status) {
+				return (String)((LinkedHashMap) response.getBody().get("response")).get("jwtSignedData");
+			} else {
+				return "";
+			}
+		} else {
+			return "";
+		}
+
+	}
+
+
 }
