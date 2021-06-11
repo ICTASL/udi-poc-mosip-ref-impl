@@ -583,10 +583,11 @@ public class IdaController {
 		authRequestDTO.setIndividualId(idValue.getText());
 		// Set Individual Id type
 		authRequestDTO.setIndividualIdType(idTypebox.getValue());
-		authRequestDTO.setEnv(env.getProperty("ida.request.captureFinger.env"));
-		authRequestDTO.setDomainUri(env.getProperty("ida.request.captureFinger.domainUri"));
+		authRequestDTO.setEnv(env.getProperty("mosip.base.url"));
+		authRequestDTO.setDomainUri(env.getProperty("mosip.base.url"));
 		RequestDTO requestDTO = new RequestDTO();
 		requestDTO.setTimestamp(getUTCCurrentDateTimeISOString());
+		requestDTO.setTransactionId(getTransactionID());
 
 		if (isOtpAuthType()) {
 			requestDTO.setOtp(otpValue.getText());
@@ -612,23 +613,20 @@ public class IdaController {
 
 		responsetextField.setText("Authenticating...");
 		// Set request block
-		authRequestDTO.setRequest(requestDTO);
-
 		authRequestDTO.setTransactionID(getTransactionID());
 		authRequestDTO.setRequestTime(getUTCCurrentDateTimeISOString());
 		authRequestDTO.setConsentObtained(true);
 		authRequestDTO.setId(getAuthRequestId());
 		authRequestDTO.setVersion("1.0");
 
-		Map<String, Object> authRequestMap = mapper.convertValue(authRequestDTO, Map.class);
-		authRequestMap.replace("request", kernelEncrypt.getEncryptedIdentity());
-		authRequestMap.replace("requestSessionKey", kernelEncrypt.getEncryptedSessionKey());
-		authRequestMap.replace("requestHMAC", kernelEncrypt.getRequestHMAC());
-		RestTemplate restTemplate = createTemplate();
-		HttpEntity<Map> httpEntity = new HttpEntity<>(authRequestMap);
+
+		authRequestDTO.setRequest(kernelEncrypt.getEncryptedIdentity());
+		authRequestDTO.setRequestSessionKey(kernelEncrypt.getEncryptedSessionKey());
+		authRequestDTO.setRequestHMAC(kernelEncrypt.getRequestHMAC());
+		RestTemplate restTemplate = createTemplateWithSignature(authRequestDTO);
+		HttpEntity<AuthRequestDTO> httpEntity = new HttpEntity<>(authRequestDTO);
 		String url = getUrl();
 		System.out.println("Auth URL: " + url);
-		System.out.println("Auth Request : \n" + new ObjectMapper().writeValueAsString(authRequestMap));
 		try {
 			ResponseEntity<Map> authResponse = restTemplate.exchange(url,
 					HttpMethod.POST, httpEntity, Map.class);
@@ -678,7 +676,7 @@ public class IdaController {
 
 		SecretKey secretKey = cryptoUtil.genSecKey();
 
-		byte[] encryptedIdentityBlock = cryptoUtil.symmetricEncrypt(identityBlock.getBytes(), secretKey);
+		byte[] encryptedIdentityBlock = cryptoUtil.symmetricEncrypt(identityBlock.getBytes(StandardCharsets.UTF_8), secretKey);
 		encryptionResponseDto.setEncryptedIdentity(Base64.encodeBase64URLSafeString(encryptedIdentityBlock));
 		
 		PublicKey publicKey = getPublicKey(identityBlock, isInternal);
@@ -917,7 +915,6 @@ public class IdaController {
 		} else {
 			return "";
 		}
-
 	}
 
 
