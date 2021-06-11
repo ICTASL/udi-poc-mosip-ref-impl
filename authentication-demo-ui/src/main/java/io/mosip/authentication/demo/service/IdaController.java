@@ -1,10 +1,6 @@
 package io.mosip.authentication.demo.service;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -25,6 +21,7 @@ import javax.net.ssl.X509TrustManager;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.mosip.authentication.demo.dto.*;
+import io.mosip.kernel.core.http.ResponseWrapper;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -34,6 +31,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -545,7 +543,7 @@ public class IdaController {
 			ResponseEntity<Map> response = restTemplate.exchange(
 					env.getProperty("ida.otp.url"),
 					HttpMethod.POST, httpEntity, Map.class);
-			System.err.println(response);
+			System.out.println(response);
 			
 			if (response.getStatusCode().is2xxSuccessful()) {
 				List errors = ((List) response.getBody().get("errors"));
@@ -875,9 +873,9 @@ public class IdaController {
 		ObjectMapper objectMapper = new ObjectMapper();
 		try {
 			String jsonStr = objectMapper.writeValueAsString(requestDTO);
-			encodedData = Base64.encodeBase64String(jsonStr.getBytes());
+			encodedData = CryptoUtil.encodeBase64(jsonStr.getBytes("UTF-8"));
 		}
-		catch (JsonProcessingException e) {
+		catch (JsonProcessingException | UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
 		JWTSignRequestDTO jwtRequest = new JWTSignRequestDTO();
@@ -900,15 +898,16 @@ public class IdaController {
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		headers.add("Cookie", "Authorization="+token);
 		HttpEntity<JWTSignRequestDTO> httpEntity = new HttpEntity<>(jwtRequest, headers);
-		ResponseEntity<Map> response = restTemplate.exchange(
+		ResponseEntity<ResponseWrapper<JWTSignResponseDTO>> response = restTemplate.exchange(
 				env.getProperty("ida.jwtsign.url"),
-				HttpMethod.POST, httpEntity, Map.class);
-		System.err.println(response);
+				HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ResponseWrapper<JWTSignResponseDTO>>() {
+				});
+		System.out.println(response);
 		if (response.getStatusCode().is2xxSuccessful()) {
-			List errors = ((List) response.getBody().get("errors"));
+			List errors = response.getBody().getErrors();
 			boolean status = errors == null || errors.isEmpty();
 			if (status) {
-				return (String)((LinkedHashMap) response.getBody().get("response")).get("jwtSignedData");
+				return response.getBody().getResponse().getJwtSignedData();
 			} else {
 				return "";
 			}
