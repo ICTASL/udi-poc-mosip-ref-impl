@@ -8,8 +8,9 @@
 <?import javafx.scene.shape.*?>
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
 
-<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="440.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.mosip.authentication.demo.service.IdaController">
+<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="440.0" prefWidth="700.0" style="-fx-background-color: white;" stylesheets="../application.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.mosip.authentication.demo.service.IdaController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
   </columnConstraints>
@@ -30,9 +31,19 @@
          <children>
             <AnchorPane prefHeight="50.0" prefWidth="200.0" GridPane.columnIndex="1">
                <children>
-                  <Label layoutX="230.0" layoutY="15.0" text="ID-Authentication Demo Application" />
+                  <Label layoutX="230.0" layoutY="15.0" text="UDI ID-Authentication">
+                      <font>
+                          <Font name="System Bold" size="18.0" />
+                      </font>
+                  </Label>
                </children>
             </AnchorPane>
+             <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                 <children>
+                     <ImageView fitHeight="150.0" fitWidth="120.0" layoutX="300.0" layoutY="60.0" pickOnBounds="true" preserveRatio="true">
+                     </ImageView>
+                 </children>
+             </AnchorPane>
             <GridPane GridPane.columnIndex="1" GridPane.rowIndex="1" vgap="10.0">
               <columnConstraints>
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -71,13 +82,13 @@
                         <HBox prefHeight="100.0" prefWidth="200.0" spacing="80.0">
                            <children>
                               <Label text="Individual-ID:" />
-                              <TextField fx:id="idValue" prefWidth="200.0" />
+                              <TextField fx:id="idValue" prefWidth="200.0" styleClass="liveTextField" />
                            </children>
                         </HBox>
                         <HBox prefHeight="100.0" prefWidth="200.0" spacing="50.0">
                            <children>
                                     <Label text="Individual-ID-Type:" />
-                                    <ComboBox fx:id="idTypebox" onAction="#onIdTypeChange" prefWidth="200.0" GridPane.columnIndex="1" />
+                                    <ComboBox fx:id="idTypebox" onAction="#onIdTypeChange" prefWidth="200.0" GridPane.columnIndex="1" styleClass="liveTextField" />
                            </children>
                         </HBox>
                      </children>
@@ -96,18 +107,18 @@
                            <children>
                               <Label layoutX="5.0" layoutY="1.0" text="Biometric Authentication" />
                            	  <Label ellipsisString="" layoutX="14.0" layoutY="15.0" prefHeight="37.0" prefWidth="131.0" text="Fingers Count:" />
-                              <ComboBox fx:id="fingerCount" layoutX="110.0" layoutY="24.0" onAction="#onSubTypeSelection" prefWidth="150.0" />
+                              <ComboBox fx:id="fingerCount" layoutX="110.0" layoutY="24.0" onAction="#onSubTypeSelection" prefWidth="150.0" styleClass="liveTextField" />
                                <Label ellipsisString="" layoutX="14.0" layoutY="55.0" prefHeight="37.0" prefWidth="131.0" text="Iris Type:" />
-                              <ComboBox fx:id="irisCount" layoutX="110.0" layoutY="65.0" onAction="#onSubTypeSelection" prefWidth="150.0" />
-                              <Button fx:id="capture" layoutX="110.0" layoutY="110.0" prefWidth="131.0" mnemonicParsing="false" onAction="#onCapture" text="Capture" />
+                              <ComboBox fx:id="irisCount" layoutX="110.0" layoutY="65.0" onAction="#onSubTypeSelection" prefWidth="150.0" styleClass="liveTextField" />
+                              <Button fx:id="capture" layoutX="110.0" layoutY="110.0" prefWidth="131.0" mnemonicParsing="false" onAction="#onCapture" styleClass="selectButton" text="Capture" />
                            </children>
                         </AnchorPane>
                         <AnchorPane fx:id="otpAnchorPane" prefHeight="200.0" prefWidth="200.0" style="-fx-border-color: black;" GridPane.columnIndex="2">
                            <children>
                               <Label layoutX="5.0" layoutY="1.0" text="OTP Authentication" />
-                              <Button fx:id="requestOtp" layoutX="14.0" layoutY="24.0" prefWidth="200.0" mnemonicParsing="false" onAction="#onRequestOtp" text="Request OTP" />
+                              <Button fx:id="requestOtp" layoutX="14.0" layoutY="24.0" prefWidth="200.0" mnemonicParsing="false" onAction="#onRequestOtp" styleClass="selectButton" text="Request OTP" />
                               <Label layoutX="14.0" layoutY="70.0" text="Enter OTP:" />
-                              <TextField fx:id="otpValue" layoutX="91.0" layoutY="70.0" prefWidth="120.0"/>
+                              <TextField fx:id="otpValue" layoutX="91.0" layoutY="70.0" prefWidth="120.0" styleClass="liveTextField"/>
                            </children>
                            <GridPane.margin>
                               <Insets />
@@ -117,8 +128,8 @@
                   </GridPane>
                   <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="2">
                      <children>
-                        <Button fx:id="sendAuthRequest" layoutX="0.0" layoutY="0.0" mnemonicParsing="false" onAction="#onSendAuthRequest" text="Send Auth Request" />
-                        <Button fx:id="reset" layoutX="585.0" layoutY="0.0" mnemonicParsing="false" onAction="#onReset" text="Reset" />
+                        <Button fx:id="sendAuthRequest" layoutX="0.0" layoutY="0.0" mnemonicParsing="false" onAction="#onSendAuthRequest" styleClass="actionSelectButton" text="Send Auth Request" />
+                        <Button fx:id="reset" layoutX="585.0" layoutY="0.0" mnemonicParsing="false" onAction="#onReset" styleClass="actionSelectButton" text="Reset" />
                      </children>
                   </AnchorPane>
                   <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="3">
