@@ -14,7 +14,7 @@ public class SmsServerResponseDto {
 	/**
 	 * Status for request.
 	 */
-	private String type;
+//	private String type;
 
 	/**
 	 * Response message
@@ -24,5 +24,9 @@ public class SmsServerResponseDto {
 	/**
 	 * Response code.
 	 */
-	private String code;
+//	private String code;
+
+	private Boolean status;
+
+	private String timestamp;
 }
