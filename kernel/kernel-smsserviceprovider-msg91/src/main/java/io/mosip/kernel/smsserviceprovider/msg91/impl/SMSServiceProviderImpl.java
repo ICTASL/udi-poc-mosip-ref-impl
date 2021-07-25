@@ -10,7 +10,6 @@ import io.mosip.kernel.core.notification.spi.SMSServiceProvider;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.kernel.smsserviceprovider.msg91.constant.SmsExceptionConstant;
 import io.mosip.kernel.smsserviceprovider.msg91.constant.SmsPropertyConstant;
-import io.mosip.kernel.smsserviceprovider.msg91.dto.GovSmsServerRequest;
 import io.mosip.kernel.smsserviceprovider.msg91.dto.SmsServerResponseDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +18,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * @author Ritesh Sinha
@@ -52,17 +54,19 @@ public class SMSServiceProviderImpl implements SMSServiceProvider {
         SMSResponseDto smsResponseDTO = new SMSResponseDto();
         validateInput(contactNumber);
 
-        GovSmsServerRequest govSmsServerRequest = new GovSmsServerRequest();
-        govSmsServerRequest.setContact(contactNumber);
-        govSmsServerRequest.setMessage(message);
-        govSmsServerRequest.setSidcode(govsmssidcode);
-        govSmsServerRequest.setUsername(govsmsusername);
-        govSmsServerRequest.setPassword(govsmspassword);
+        HashMap<String, String> govSmsServerRequest = new HashMap<String, String>();
+        govSmsServerRequest.put("data", message);
+        govSmsServerRequest.put("phoneNumber", contactNumber);
+        govSmsServerRequest.put("sIDCode", govsmssidcode);
+        govSmsServerRequest.put("userName", govsmsusername);
+        govSmsServerRequest.put("password", govsmspassword);
 
         try {
             HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
             httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<GovSmsServerRequest> entity = new HttpEntity<GovSmsServerRequest>(govSmsServerRequest, httpHeaders);
+
+            HttpEntity<HashMap<String, String>> entity = new HttpEntity<HashMap<String, String>>(govSmsServerRequest, httpHeaders);
             ResponseEntity<String> responseEntity = restTemplate.exchange(govsmsapi, HttpMethod.POST, entity, String.class);
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
                 SmsServerResponseDto smsServerResponseDto = new SmsServerResponseDto();

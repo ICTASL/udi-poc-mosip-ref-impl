@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.kernel.core.notification.exception.InvalidNumberException;
 import io.mosip.kernel.core.notification.model.SMSResponseDto;
 import io.mosip.kernel.smsserviceprovider.msg91.SMSServiceProviderBootApplication;
-import io.mosip.kernel.smsserviceprovider.msg91.dto.GovSmsServerRequest;
 import io.mosip.kernel.smsserviceprovider.msg91.dto.SmsServerResponseDto;
 import io.mosip.kernel.smsserviceprovider.msg91.impl.SMSServiceProviderImpl;
 import org.junit.Test;
@@ -18,6 +17,9 @@ import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
+import java.util.HashMap;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -26,7 +28,7 @@ import static org.mockito.Mockito.when;
 public class SmsServiceProviderTest {
 
     @Autowired
-    SMSServiceProviderImpl service;
+    private SMSServiceProviderImpl service;
 
     @MockBean
     RestTemplate restTemplate;
@@ -46,12 +48,12 @@ public class SmsServiceProviderTest {
     @Test
     public void sendSmsTest() throws Exception {
 
-        GovSmsServerRequest govSmsServerRequest = new GovSmsServerRequest();
-        govSmsServerRequest.setContact("8987876473");
-        govSmsServerRequest.setMessage("your otp is 4646");
-        govSmsServerRequest.setSidcode(govsmssidcode);
-        govSmsServerRequest.setUsername(govsmsusername);
-        govSmsServerRequest.setPassword(govsmspassword);
+        HashMap<String, String> govSmsServerRequest = new HashMap<String, String>();
+        govSmsServerRequest.put("data", "your otp is 4646");
+        govSmsServerRequest.put("phoneNumber", "8987876473");
+        govSmsServerRequest.put("sIDCode", govsmssidcode);
+        govSmsServerRequest.put("userName", govsmsusername);
+        govSmsServerRequest.put("password", govsmspassword);
 
         SmsServerResponseDto expectServerResponse = new SmsServerResponseDto();
         expectServerResponse.setMessage("success");
@@ -62,8 +64,10 @@ public class SmsServiceProviderTest {
 
         try {
             HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
             httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<GovSmsServerRequest> entity = new HttpEntity<GovSmsServerRequest>(govSmsServerRequest, httpHeaders);
+
+            HttpEntity<HashMap<String, String>> entity = new HttpEntity<HashMap<String, String>>(govSmsServerRequest, httpHeaders);
             ResponseEntity<String> responseEntity = restTemplate.exchange(govsmsapi, HttpMethod.POST, entity, String.class);
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
                 SmsServerResponseDto smsServerResponseDto = new SmsServerResponseDto();
