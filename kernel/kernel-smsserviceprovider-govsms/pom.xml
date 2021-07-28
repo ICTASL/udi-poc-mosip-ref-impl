@@ -9,10 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.smsserviceprovider</groupId>
-	<artifactId>govsms</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>govsms</name>
-	<description>Gov SMS service provider</description>
+	<artifactId>kernel-smsserviceprovider-govsms</artifactId>
+	<name>kernel-smsserviceprovider-govsms</name>
+	<description>kernel-smsserviceprovider-govsms</description>
 	<properties>
 		<java.version>11</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
