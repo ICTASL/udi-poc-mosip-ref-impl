@@ -27,7 +27,7 @@ import java.util.HashMap;
  * @author Haren Senevirathna
  * @since 1.0.0
  */
-@Service
+@Component
 public class GovSMSServiceProviderImpl implements SMSServiceProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(GovSMSServiceProviderImpl.class);

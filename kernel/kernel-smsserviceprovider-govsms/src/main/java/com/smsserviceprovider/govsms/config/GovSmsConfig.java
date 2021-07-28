@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GovSmsConfig {
 
-//    @Bean
-//    public SmsNotification SmsNotification(){
-//        return new
-//    }
+    @Bean
+    private SMSServiceProvider smsServiceProvider() {
+        return new GovSMSServiceProviderImpl();
+    }
 }
