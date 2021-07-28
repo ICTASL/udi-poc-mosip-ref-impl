@@ -1,10 +1,10 @@
-package com.smsserviceprovider.govsms.dto.response;
+package io.mosip.kernel.smsserviceprovider.govsms.dto;
 
 import lombok.Data;
 
 /**
  * The DTO class for sms server response.
- * 
+ *
  * @author Haren Senevirathna
  * @since 1.0.0
  *

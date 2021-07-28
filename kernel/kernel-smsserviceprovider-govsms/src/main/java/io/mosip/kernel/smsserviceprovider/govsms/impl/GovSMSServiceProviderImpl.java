@@ -1,23 +1,22 @@
 /**
  *
  */
-package com.smsserviceprovider.govsms.impl;
+package io.mosip.kernel.smsserviceprovider.govsms.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.smsserviceprovider.govsms.constant.SmsExceptionConstant;
-import com.smsserviceprovider.govsms.constant.SmsPropertyConstant;
-import com.smsserviceprovider.govsms.dto.response.GovSmsServerResponseDto;
 import io.mosip.kernel.core.notification.exception.InvalidNumberException;
 import io.mosip.kernel.core.notification.model.SMSResponseDto;
 import io.mosip.kernel.core.notification.spi.SMSServiceProvider;
 import io.mosip.kernel.core.util.StringUtils;
+import io.mosip.kernel.smsserviceprovider.govsms.constant.SmsExceptionConstant;
+import io.mosip.kernel.smsserviceprovider.govsms.constant.SmsPropertyConstant;
+import io.mosip.kernel.smsserviceprovider.govsms.dto.GovSmsServerResponseDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;

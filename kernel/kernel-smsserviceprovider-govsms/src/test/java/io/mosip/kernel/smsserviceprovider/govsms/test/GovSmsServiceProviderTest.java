@@ -1,10 +1,11 @@
-package com.smsserviceprovider.govsms;
+package io.mosip.kernel.smsserviceprovider.govsms.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.smsserviceprovider.govsms.dto.response.GovSmsServerResponseDto;
-import com.smsserviceprovider.govsms.impl.GovSMSServiceProviderImpl;
 import io.mosip.kernel.core.notification.exception.InvalidNumberException;
 import io.mosip.kernel.core.notification.model.SMSResponseDto;
+import io.mosip.kernel.smsserviceprovider.govsms.SMSServiceProviderBootApplication;
+import io.mosip.kernel.smsserviceprovider.govsms.dto.GovSmsServerResponseDto;
+import io.mosip.kernel.smsserviceprovider.govsms.impl.GovSMSServiceProviderImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -23,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {GovsmsApplication.class})
+@SpringBootTest(classes = {SMSServiceProviderBootApplication.class})
 public class GovSmsServiceProviderTest {
 
     @Autowired

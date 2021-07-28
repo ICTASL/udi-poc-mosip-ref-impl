@@ -1,4 +1,4 @@
-package com.smsserviceprovider.govsms.constant;
+package io.mosip.kernel.smsserviceprovider.govsms.constant;
 
 /**
  * This enum provides all the exception constants for sms notification.
@@ -9,9 +9,7 @@ package com.smsserviceprovider.govsms.constant;
  */
 public enum SmsExceptionConstant {
 
-
 	SMS_INVALID_CONTACT_NUMBER("KER-NOS-002", "Contact number cannot contains alphabet,special character or less than or more than ");
-
 	/**
 	 * The error code.
 	 */

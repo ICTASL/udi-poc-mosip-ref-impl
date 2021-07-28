@@ -1,4 +1,4 @@
-package com.smsserviceprovider.govsms.constant;
+package io.mosip.kernel.smsserviceprovider.govsms.constant;
 
 /**
  * This enum provides all the constant for sms notification.
