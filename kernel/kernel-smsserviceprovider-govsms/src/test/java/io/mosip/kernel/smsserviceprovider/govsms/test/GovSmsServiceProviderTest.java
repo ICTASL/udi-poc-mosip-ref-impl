@@ -8,8 +8,8 @@ import io.mosip.kernel.smsserviceprovider.govsms.dto.GovSmsServerResponseDto;
 import io.mosip.kernel.smsserviceprovider.govsms.impl.GovSMSServiceProviderImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = {SMSServiceProviderBootApplication.class})
 public class GovSmsServiceProviderTest {
 
-    @Autowired
+    @InjectMocks
     private GovSMSServiceProviderImpl service;
 
     @MockBean
@@ -102,7 +102,7 @@ public class GovSmsServiceProviderTest {
         service.sendSms("7897897458673484376", "hello your otp is 45373");
     }
 
-    @Test
+    @Test(expected = InvalidNumberException.class)
     public void validGateWayTest() {
         service.sendSms("1234567890", "hello your otp is 45373");
     }
