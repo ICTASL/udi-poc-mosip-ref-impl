@@ -51,6 +51,7 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
 
     @Override
     public SMSResponseDto sendSms(String contactNumber, String message) {
+        logger.error("call to sms====");
         SMSResponseDto smsResponseDTO = new SMSResponseDto();
         validateInput(contactNumber);
 
@@ -69,12 +70,14 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
             HttpEntity<HashMap<String, String>> entity = new HttpEntity<HashMap<String, String>>(govSmsServerRequest, httpHeaders);
             ResponseEntity<String> responseEntity = restTemplate.exchange(govsmsapi, HttpMethod.POST, entity, String.class);
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
+                logger.error("1success");
                 GovSmsServerResponseDto govSmsServerResponseDto = new GovSmsServerResponseDto();
                 String serverResponse = responseEntity.getBody();
                 ObjectMapper objectMapper = new ObjectMapper();
                 govSmsServerResponseDto = objectMapper.readValue(serverResponse, GovSmsServerResponseDto.class);
 
                 if (govSmsServerResponseDto.getStatus()) {
+                    logger.error("2success");
                     smsResponseDTO.setMessage(SmsPropertyConstant.SUCCESS_RESPONSE.getProperty());
                     smsResponseDTO.setStatus("success");
                     return smsResponseDTO;
