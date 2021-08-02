@@ -1,0 +1,18 @@
+.liveTextField {
+        -fx-pref-height: 5.0px;
+    	-fx-border-color: black;
+    	-fx-background-insets: 0.0,0.0 0.0 0.0 0.0;
+      	-fx-border-width: 0.0 0.0 1.0 0.0;
+      	-fx-background-color: white;
+}
+.selectButton{
+        -fx-border-color: #f05c07;
+        -fx-background-color:white;
+        -fx-text-fill:#f05c07;
+        -fx-border-radius:3px;
+}
+.actionSelectButton{
+ -fx-background-color:#f05c07;
+ -fx-text-fill:white;
+ -fx-border-radius:3px;
+}
