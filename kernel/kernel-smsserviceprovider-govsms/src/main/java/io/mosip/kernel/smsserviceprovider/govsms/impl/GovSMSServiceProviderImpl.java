@@ -95,6 +95,7 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
             }
         } catch (Exception e) {
             logger.info("failure");
+            logger.error("Exception coming========>", e);
             smsResponseDTO.setMessage(SmsPropertyConstant.ERROR_RESPONSE.getProperty());
             smsResponseDTO.setStatus("failure");
             return smsResponseDTO;
