@@ -54,47 +54,52 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
         logger.info("GOVSMS EXECUTED===============");
         SMSResponseDto smsResponseDTO = new SMSResponseDto();
         validateInput(contactNumber);
-
+        logger.info("contact number validated===============");
         HashMap<String, String> govSmsServerRequest = new HashMap<String, String>();
         govSmsServerRequest.put("data", message);
         govSmsServerRequest.put("phoneNumber", contactNumber);
         govSmsServerRequest.put("sIDCode", govsmssidcode);
         govSmsServerRequest.put("userName", govsmsusername);
         govSmsServerRequest.put("password", govsmspassword);
-
+        logger.info("govSmsServerRequest===============" + govSmsServerRequest);
         try {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
             httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-
+            logger.info("httpHeaders===============" + httpHeaders.getAccept());
+            logger.info("httpHeaders===============" + httpHeaders.getContentType());
             HttpEntity<HashMap<String, String>> entity = new HttpEntity<HashMap<String, String>>(govSmsServerRequest, httpHeaders);
             ResponseEntity<String> responseEntity = restTemplate.exchange(govsmsapi, HttpMethod.POST, entity, String.class);
+            logger.info("responseEntity===============" + responseEntity.getStatusCode());
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                logger.info("1success");
+                logger.info("request HttpStatus Ok===============");
                 GovSmsServerResponseDto govSmsServerResponseDto = new GovSmsServerResponseDto();
                 String serverResponse = responseEntity.getBody();
+                logger.info("serverResponse===============" + responseEntity.getBody());
                 ObjectMapper objectMapper = new ObjectMapper();
                 govSmsServerResponseDto = objectMapper.readValue(serverResponse, GovSmsServerResponseDto.class);
-
+                logger.info("govSmsServerResponseDto===============" + govSmsServerResponseDto);
                 if (govSmsServerResponseDto.getStatus()) {
-                    logger.info("2success");
+                    logger.info("server response status true===========");
                     smsResponseDTO.setMessage(SmsPropertyConstant.SUCCESS_RESPONSE.getProperty());
                     smsResponseDTO.setStatus("success");
+                    logger.info("smsResponseDTO==========="+smsResponseDTO);
                     return smsResponseDTO;
                 } else {
-                    logger.info("failure");
+                    logger.info("server response status false===========");
                     smsResponseDTO.setMessage(SmsPropertyConstant.ERROR_RESPONSE.getProperty());
                     smsResponseDTO.setStatus("failure");
+                    logger.info("smsResponseDTO==========="+smsResponseDTO);
                     return smsResponseDTO;
                 }
             } else {
-                logger.info("failure");
+                logger.info("request HttpStatus Not Ok===============");
                 smsResponseDTO.setMessage(SmsPropertyConstant.ERROR_RESPONSE.getProperty());
                 smsResponseDTO.setStatus("failure");
                 return smsResponseDTO;
             }
         } catch (Exception e) {
-            logger.info("failure");
+            logger.info("Exception");
             logger.error("Exception coming========>", e);
             smsResponseDTO.setMessage(SmsPropertyConstant.ERROR_RESPONSE.getProperty());
             smsResponseDTO.setStatus("failure");

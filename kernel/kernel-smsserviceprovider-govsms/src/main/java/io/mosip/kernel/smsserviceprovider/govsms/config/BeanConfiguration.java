@@ -15,8 +15,8 @@ public class BeanConfiguration {
     public RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
 
         return restTemplateBuilder
-                .setConnectTimeout(Duration.ofSeconds(120).toSecondsPart())
-                .setReadTimeout(Duration.ofSeconds(120).toSecondsPart())
+                .setConnectTimeout(Duration.ofSeconds(60).toSecondsPart())
+                .setReadTimeout(Duration.ofSeconds(60).toSecondsPart())
                 .build();
     }
 }
