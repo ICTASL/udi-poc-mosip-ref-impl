@@ -1,0 +1,7 @@
+{
+  "/api/*": {
+    "target": "https://digitalid.lgcc.gov.lk/",
+    "secure": false,
+    "logLevel": "debug"
+  }
+}
