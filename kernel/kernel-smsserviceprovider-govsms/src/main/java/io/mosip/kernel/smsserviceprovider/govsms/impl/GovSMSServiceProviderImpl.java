@@ -19,8 +19,10 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author Haren Senevirathna
@@ -63,13 +65,31 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
         govSmsServerRequest.put("password", govsmspassword);
         logger.info("govSmsServerRequest===============" + govSmsServerRequest);
         try {
-            HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-            httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-            logger.info("httpHeaders===============" + httpHeaders.getAccept());
-            logger.info("httpHeaders===============" + httpHeaders.getContentType());
-            HttpEntity<HashMap<String, String>> entity = new HttpEntity<HashMap<String, String>>(govSmsServerRequest, httpHeaders);
-            ResponseEntity<String> responseEntity = restTemplate.exchange(govsmsapi, HttpMethod.POST, entity, String.class);
+            ResponseEntity<String> responseEntity = null;
+            if (message.length() > 200) {
+                logger.info("Message content length is grater than 200===============");
+                List<String> messagesList = new ArrayList<>();
+                int messageLength = message.length();
+                int singleMsgSize = 200;
+
+                for (int i = 0; i < messageLength; i += singleMsgSize) {
+                    messagesList.add(message.substring(i, Math.min(messageLength, i + singleMsgSize)));
+                }
+
+                for (String subMessage : messagesList) {
+                    govSmsServerRequest.put("data", subMessage);
+                    responseEntity = sendSmsApi(govSmsServerRequest);
+                    logger.info("Sub Message content ===============" + subMessage);
+                    if (responseEntity.getStatusCode() != HttpStatus.OK) {
+                        logger.info("Process break ===============");
+                        break;
+                    }
+                }
+            } else {
+                logger.info("Message content length is less than 200===============");
+                responseEntity = sendSmsApi(govSmsServerRequest);
+            }
+
             logger.info("responseEntity===============" + responseEntity.getStatusCode());
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
                 logger.info("request HttpStatus Ok===============");
@@ -83,13 +103,13 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
                     logger.info("server response status true===========");
                     smsResponseDTO.setMessage(SmsPropertyConstant.SUCCESS_RESPONSE.getProperty());
                     smsResponseDTO.setStatus("success");
-                    logger.info("smsResponseDTO==========="+smsResponseDTO);
+                    logger.info("smsResponseDTO===========" + smsResponseDTO);
                     return smsResponseDTO;
                 } else {
                     logger.info("server response status false===========");
                     smsResponseDTO.setMessage(SmsPropertyConstant.ERROR_RESPONSE.getProperty());
                     smsResponseDTO.setStatus("failure");
-                    logger.info("smsResponseDTO==========="+smsResponseDTO);
+                    logger.info("smsResponseDTO===========" + smsResponseDTO);
                     return smsResponseDTO;
                 }
             } else {
@@ -105,6 +125,17 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
             smsResponseDTO.setStatus("failure");
             return smsResponseDTO;
         }
+    }
+
+    private ResponseEntity<String> sendSmsApi(HashMap<String, String> govSmsServerRequest) throws Exception {
+        logger.info("sendSmsApi ===============" );
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        System.out.println(govSmsServerRequest);
+        HttpEntity<HashMap<String, String>> entity = new HttpEntity<HashMap<String, String>>(govSmsServerRequest, httpHeaders);
+        ResponseEntity<String> responseEntity = restTemplate.exchange(govsmsapi, HttpMethod.POST, entity, String.class);
+        return responseEntity;
     }
 
     private void validateInput(String contactNumber) {
