@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Haren Senevirathna
@@ -68,22 +70,17 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
             ResponseEntity<String> responseEntity = null;
             if (message.length() > 200) {
                 logger.info("Message content length is grater than 200===============");
-                List<String> messagesList = new ArrayList<>();
-                int messageLength = message.length();
-                int singleMsgSize = 200;
-
-                for (int i = 0; i < messageLength; i += singleMsgSize) {
-                    messagesList.add(message.substring(i, Math.min(messageLength, i + singleMsgSize)));
-                }
+                List<String> messagesList = splitMessages(message);
 
                 for (String subMessage : messagesList) {
                     govSmsServerRequest.put("data", subMessage);
-                    responseEntity = sendSmsApi(govSmsServerRequest);
                     logger.info("Sub Message content ===============" + subMessage);
+                    responseEntity = sendSmsApi(govSmsServerRequest);
                     if (responseEntity.getStatusCode() != HttpStatus.OK) {
                         logger.info("Process break ===============");
                         break;
                     }
+                    Thread.sleep(2000);
                 }
             } else {
                 logger.info("Message content length is less than 200===============");
@@ -125,6 +122,17 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
             smsResponseDTO.setStatus("failure");
             return smsResponseDTO;
         }
+    }
+
+    private List<String> splitMessages(String message){
+        List<String> messagesList = new ArrayList<>();
+        Pattern pattern = Pattern.compile(".{1,200}(\\s+|$)");
+        Matcher matcher = pattern.matcher(message);
+
+        while(matcher.find()) {
+            messagesList.add(matcher.group().trim());
+        }
+        return messagesList;
     }
 
     private ResponseEntity<String> sendSmsApi(HashMap<String, String> govSmsServerRequest) throws Exception {
