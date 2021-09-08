@@ -124,19 +124,19 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
         }
     }
 
-    private List<String> splitMessages(String message){
+    private List<String> splitMessages(String message) {
         List<String> messagesList = new ArrayList<>();
         Pattern pattern = Pattern.compile(".{1,200}(\\s+|$)");
         Matcher matcher = pattern.matcher(message);
 
-        while(matcher.find()) {
+        while (matcher.find()) {
             messagesList.add(matcher.group().trim());
         }
         return messagesList;
     }
 
     private ResponseEntity<String> sendSmsApi(HashMap<String, String> govSmsServerRequest) throws Exception {
-        logger.info("sendSmsApi ===============" );
+        logger.info("sendSmsApi ===============");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
