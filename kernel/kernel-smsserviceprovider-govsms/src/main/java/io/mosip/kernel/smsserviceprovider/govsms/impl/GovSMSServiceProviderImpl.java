@@ -80,7 +80,7 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
                         logger.info("Process break ===============");
                         break;
                     }
-                    Thread.sleep(2000);
+                    Thread.sleep(4000);
                 }
             } else {
                 logger.info("Message content length is less than 200===============");
@@ -126,7 +126,7 @@ public class GovSMSServiceProviderImpl implements SMSServiceProvider {
 
     private List<String> splitMessages(String message) {
         List<String> messagesList = new ArrayList<>();
-        Pattern pattern = Pattern.compile(".{1,200}(\\s+|$)");
+        Pattern pattern = Pattern.compile("(.|\\s){1,200}(\\s+|$)");
         Matcher matcher = pattern.matcher(message);
 
         while (matcher.find()) {
