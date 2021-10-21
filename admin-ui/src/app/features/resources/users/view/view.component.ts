@@ -10,7 +10,7 @@ import { AppConfigService } from 'src/app/app-config.service';
 })
 export class ViewComponent implements OnInit {
   keycloakUrl =
-    'https://mosipkeycloak.southindia.cloudapp.azure.com/auth/admin/master/console/#/realms/mosip/users';
+    'https://testsludi.lgcc.gov.lk/keycloak/auth/admin/master/console/#/realms/mosip/users';
 
   constructor(
     private auditService: AuditService,
