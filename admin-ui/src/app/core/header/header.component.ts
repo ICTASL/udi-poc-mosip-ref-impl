@@ -33,7 +33,7 @@ export class HeaderComponent implements OnInit {
   };
 
   zone: string;
-  appVersion :"";
+  appVersion : "";
   constructor(
     public sideMenuService: SideMenuService,
     private translateService: TranslateService,
@@ -42,7 +42,7 @@ export class HeaderComponent implements OnInit {
     private dataService: DataStorageService
   ) {
     // tslint:disable-next-line:no-string-literal
-    translateService.use(this.headerService.getUserPreferredLanguage());
+    translateService.use(appConfigService.getConfig()['primaryLangCode']);
     this.appVersion = appConfigService.getConfig()['version'];
   }
 
@@ -53,7 +53,7 @@ export class HeaderComponent implements OnInit {
       this.dataService
       .getLoggedInUserZone(
         this.headerService.getUsername(),
-        this.headerService.getUserPreferredLanguage()
+        this.appConfigService.getConfig()['primaryLangCode']
       )
       .subscribe(response => {
         if (response.response) {

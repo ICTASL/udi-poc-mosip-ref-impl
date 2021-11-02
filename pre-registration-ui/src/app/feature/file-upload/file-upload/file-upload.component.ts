@@ -721,6 +721,9 @@ export class FileUploadComponent implements OnInit, OnDestroy {
       },
     };
     let activeUsers: any[] = [];
+    const nameAttribute = this.config.getConfigByKey(
+      appConstants.CONFIG_KEYS.preregistartion_identity_name
+    );
     for (let i of this.activeUsers) {
       fullName = {
         language: "",
@@ -737,7 +740,7 @@ export class FileUploadComponent implements OnInit, OnDestroy {
           if (file.docCatCode === "POA") {
             user.preRegistrationId = i.preRegId;
             user.demographicMetadata.fullName =
-              i.request.demographicDetails.identity.fullName;
+              i.request.demographicDetails.identity[nameAttribute];
             activeUsers.push(JSON.parse(JSON.stringify(user)));
           }
         }

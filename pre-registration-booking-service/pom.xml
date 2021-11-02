@@ -3,25 +3,25 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<scm>	
-                <connection>scm:git:git://github.com/mosip/mosip-ref-impl.git</connection>	
-                <developerConnection>scm:git:ssh://github.com:mosip/mosip-ref-impl.git</developerConnection>	
-                <url>https://github.com/mosip/mosip-ref-impl</url>	
-                <tag>HEAD</tag>	
+	<scm>
+                <connection>scm:git:git://github.com/mosip/mosip-ref-impl.git</connection>
+                <developerConnection>scm:git:ssh://github.com:mosip/mosip-ref-impl.git</developerConnection>
+                <url>https://github.com/mosip/mosip-ref-impl</url>
+                <tag>HEAD</tag>
         </scm>
 
 	<groupId>io.mosip.preregistration</groupId>
 	<artifactId>pre-registration-booking-service</artifactId>
-	<version>1.2.0-SNAPSHOT</version>
+	<version>1.1.5.2</version>
 	<name>pre-registration-booking-service</name>
-	<description>Booking service of  MOSIP Pre-registration</description>	
-	<url>https://github.com/mosip/mosip-ref-impl</url>	
-		
-	<licenses>	
-          <license>	
-                <name>MPL 2.0</name>	
-                <url>https://www.mozilla.org/en-US/MPL/2.0/</url>	
-          </license>	
+	<description>Booking service of  MOSIP Pre-registration</description>
+	<url>https://github.com/mosip/mosip-ref-impl</url>
+	
+	<licenses>
+          <license>
+                <name>MPL 2.0</name>
+                <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+          </license>
         </licenses>
 
 	<developers>
@@ -47,8 +47,9 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<io.micrometer.prometheus.version>1.4.2</io.micrometer.prometheus.version>
-		<pre.registration.core.version>1.2.0-SNAPSHOT</pre.registration.core.version>
-		<kernel.core.version>1.2.0-SNAPSHOT</kernel.core.version>
+		<pre.registration.core.version>1.1.5.2</pre.registration.core.version>
+		<kernel.core.version>1.1.5.2</kernel.core.version>
+
 		<!-- Core -->
 		<spring.boot.version>2.0.2.RELEASE</spring.boot.version>
 		<spring.data.version>2.0.9.RELEASE</spring.data.version>
@@ -97,8 +98,8 @@
 		<maven.compiler.version>3.8.0</maven.compiler.version>
 		<maven.jar.plugin.version>3.0.2</maven.jar.plugin.version>
 		<maven.war.plugin.version>3.1.0</maven.war.plugin.version>
-		<maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
-		<maven.jacoco.plugin.version>0.8.5</maven.jacoco.plugin.version>
+		<maven.surefire.plugin.version>2.9</maven.surefire.plugin.version>
+		<maven.jacoco.plugin.version>0.8.1</maven.jacoco.plugin.version>
 		<maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version>
 		<maven.javadoc.version>3.2.0</maven.javadoc.version>
 
@@ -122,7 +123,7 @@
 			<dependency>
 				<groupId>javax.xml.bind</groupId>
 				<artifactId>jaxb-api</artifactId>
-				<version>2.3.0</version>
+				<version>2.3.1</version>
 			</dependency>
 			<dependency>
 				<groupId>javax.activation</groupId>
@@ -132,7 +133,7 @@
 			<dependency>
 				<groupId>org.glassfish.jaxb</groupId>
 				<artifactId>jaxb-runtime</artifactId>
-				<version>2.3.0-b170127.1453</version>
+				<version>2.3.1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.javassist</groupId>
@@ -259,37 +260,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>${maven.surefire.plugin.version}</version>
-				<configuration>
-					<skipTests>${skipTests}</skipTests>
-					<skip>false</skip>
-					<argLine>
-						${argLine} --add-opens java.xml/jdk.xml.internal=ALL-UNNAMED --illegal-access=permit
-					</argLine>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${maven.jacoco.plugin.version}</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>report</id>
-						<phase>prepare-package</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
@@ -343,35 +313,6 @@
 			</plugin>
 		</plugins>
 	</build>
-	<profiles>
-		<profile>
-			<id>sonar</id>
-			<properties>
-				<sonar.sources>.</sonar.sources>
-				<sonar.inclusions>src/main/java/**,src/main/resources/**</sonar.inclusions>
-				<sonar.exclusions>${sonar.coverage.exclusions}</sonar.exclusions>
-				<sonar.host.url>https://sonarcloud.io</sonar.host.url>
-			</properties>
-			<activation>
-				<activeByDefault>false</activeByDefault>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.sonarsource.scanner.maven</groupId>
-						<artifactId>sonar-maven-plugin</artifactId>
-						<version>${maven.sonar.plugin.version}</version>
-						<executions>
-							<execution>
-								<phase>verify</phase>
-								<goals>
-									<goal>sonar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+
 </project>
+

@@ -8,9 +8,7 @@ import { DataStorageService } from "src/app/core/services/data-storage.service";
 import { RegistrationService } from "src/app/core/services/registration.service";
 import { ConfigService } from "src/app/core/services/config.service";
 import * as appConstants from "../../app.constants";
-import Utils from "src/app/app.util";
-import moment from "moment";
-import stubConfig from "../../../assets/stub-config.json";
+import LanguageFactory from "../../../assets/i18n";
 
 @Component({
   selector: "app-login",
@@ -18,42 +16,44 @@ import stubConfig from "../../../assets/stub-config.json";
   styleUrls: ["./login.component.css"],
 })
 export class LoginComponent implements OnInit {
-  appVersion;
+  languages: string[] = [];
+  inputPlaceholderContact = "Email ID or Phone Number";
+  inputPlaceholderOTP = "Enter OTP";
   disableBtn = false;
   timer: any;
   inputOTP: string;
   inputContactDetails = "";
+  secondaryLangCode = "";
+  secondaryDir = "";
   selectedLanguage = "";
-  dir = "ltr";
+  langCode = "";
+  dir = "";
+  primaryLangFromConfig = "";
+  primaryLang = "";
+  secondaryLangFromConfig = "";
+  defaultLangCode = appConstants.DEFAULT_LANG_CODE;
+  secondaryLang = "";
   showSendOTP = true;
   showResend = false;
   showVerify = false;
   showContactDetails = true;
   showOTP = false;
   disableVerify = false;
-  Languagelabels: any;
+  secondaryLanguagelabels: any;
   loggedOutLang: string;
   errorMessage: string;
-  loadingMessage: string;
   minutes: string;
   seconds: string;
   showSpinner = true;
-  showLanguageDropDown = true;
   validationMessages = {};
+  textDir = localStorage.getItem("dir");
+  LANGUAGE_ERROR_TEXT =
+    "The system has encountered a technical error. Administrator to setup the necessary language configuration(s)";
   siteKey: any;
   enableCaptcha = false;
   enableSendOtp: boolean;
-  showCaptcha = true;
+  showCaptcha: boolean = true;
   captchaError: boolean;
-  mandatoryLanguages: string[];
-  optionalLanguages: string[];
-  minLanguage: Number;
-  maxLanguage: Number;
-  languageSelectionArray = [];
-  userPreferredLanguage: string;
-  langCode: string;
-  LanguageCodelabels;
-  languageCodeValue: any = [];
   captchaToken = null;
   resetCaptcha: boolean;
   constructor(
@@ -65,457 +65,27 @@ export class LoginComponent implements OnInit {
     private regService: RegistrationService,
     private configService: ConfigService
   ) {
-    clearInterval(this.timer);
+    translate.setDefaultLang("eng");
+    localStorage.clear();
   }
 
-  //very imp to clear the timer func 
-  ngOnDestroy(){
-    clearInterval(this.timer);
-  }
-
-  async ngOnInit() {
-    //console.log(`forceLogout: ${localStorage.getItem(appConstants.FORCE_LOGOUT)}`);
-    //console.log("isAuthenticated: " + this.authService.isAuthenticated());
-    if (localStorage.getItem(appConstants.FORCE_LOGOUT) != appConstants.FORCE_LOGOUT_YES 
-      && this.authService.isAuthenticated()) {
-      //console.log("valid session redirecting to dashboard");
-      this.router.navigate([localStorage.getItem("langCode"), "dashboard"]);
-    } else {
-      if (localStorage.getItem(appConstants.FORCE_LOGOUT) == appConstants.FORCE_LOGOUT_YES) {
-        this.authService.onLogout();
-      }
-      await this.loadDefaultConfig();
-      await this.loadConfigs();
-      if (this.router.url.includes(`${localStorage.getItem("langCode")}`)) {
-        this.handleBrowserReload();
-      }
-      localStorage.setItem("dir", this.dir);
+  ngOnInit() {
+    localStorage.setItem("langCode", "eng");
+    this.showSpinner = true;
+    this.loadConfigs();
+    if (this.authService.isAuthenticated()) {
+      this.authService.onLogout();
     }
-  }
-
-  async loadDefaultConfig() {
-    return new Promise((resolve, reject) => {
-      this.dataService.getI18NLanguageFiles("default").subscribe((response) => {
-        this.LanguageCodelabels = response["languages"];
-        resolve(true);
-      });
-    });
-  }
-
-  async loadConfigs() {
-    this.dataService.getConfig().subscribe((response) => {
-      //response = stubConfig;
-      this.configService.setConfig(response);
-      this.appVersion = this.configService.getConfigByKey(
-        "preregistration.ui.version"
-      );
-      this.isCaptchaEnabled();
-      this.loadLanguagesWithConfig();
-      if (!localStorage.getItem("langCode")) {
-        localStorage.setItem("langCode", this.languageSelectionArray[0]);
-      }
-      let langCodeInUrl = this.router.url.includes(`${localStorage.getItem("langCode")}`);
-      if (!langCodeInUrl) {
-        this.router.navigate([`${localStorage.getItem("langCode")}`]);
-      }
-      this.selectedLanguage = localStorage.getItem("langCode");
-      this.setLanguageDirection(this.selectedLanguage);
-      this.authService.userPreferredLang = this.selectedLanguage;
-      this.userPreferredLanguage = this.selectedLanguage;
-      localStorage.setItem("userPrefLanguage", this.userPreferredLanguage);
-      this.translate.use(this.userPreferredLanguage);
-      this.loadValidationMessages();
-      this.showSpinner = false;
-    });
-  }
-
-  handleBrowserReload() {
-    let otp_sent_time = null;
-    if(localStorage.getItem("otp_sent_time") != null){
-      otp_sent_time = localStorage.getItem("otp_sent_time").endsWith("Z")
-      ? localStorage.getItem("otp_sent_time")
-      : localStorage.getItem("otp_sent_time") + "Z";
-    } 
-    const user_email_or_phone = localStorage.getItem("user_email_or_phone");
-    console.log(`otp_sent_time: ${otp_sent_time}`);
-    if (otp_sent_time && user_email_or_phone) {
-      let otpSentTime = moment(otp_sent_time).toISOString();
-      //console.log(`otpSentTime: ${otpSentTime}`);
-      let currentTime = moment().toISOString();
-      //console.log(`currentTime: ${currentTime}`);
-      let otpExpiryIntervalInSeconds = Number(
-        this.configService.getConfigByKey(
-          appConstants.CONFIG_KEYS.mosip_kernel_otp_expiry_time
-        )
-      );
-      if (isNaN(otpExpiryIntervalInSeconds)) {
-        otpExpiryIntervalInSeconds = 120; //2 mins by default
-      }
-      //console.log(`otpExpiryIntervalInSeconds: ${otpExpiryIntervalInSeconds}`);
-      var timeLapsedInSeconds = moment(currentTime).diff(
-        moment(otpSentTime),
-        "seconds"
-      );
-      //console.log(`timeLapsedInSeconds: ${timeLapsedInSeconds}`);
-      if (timeLapsedInSeconds <= otpExpiryIntervalInSeconds) {
-        console.log("otp interval not yet expired");
-        //console.log(this.timer);
-        let newOtpIntervalInSeconds =
-          otpExpiryIntervalInSeconds - timeLapsedInSeconds;
-        console.log(`newOtpIntervalInSeconds: ${newOtpIntervalInSeconds}`);
-        if (JSON.parse(localStorage.getItem("show_captcha"))) {
-          this.showCaptcha = true;
-        } else {
-          this.showCaptcha = false;
-        }
-        this.errorMessage = "";
-        this.inputOTP = "";
-        //this.showResend = false;
-        this.showOTP = true;
-        this.showSendOTP = false;
-        this.showContactDetails = false;
-        this.enableSendOtp = false;
-        this.inputContactDetails = user_email_or_phone;
-        let mins = 0;
-        if (newOtpIntervalInSeconds >= 60) {
-          mins = newOtpIntervalInSeconds / 60;
-          mins = Math.floor(mins);
-        }
-        if (mins < 10) {
-          this.minutes = "0" + mins;
-        } else {
-          this.minutes = String(mins);
-        }
-        let secs = newOtpIntervalInSeconds % 60;
-        if (secs < 10) {
-          this.seconds = "0" + secs;
-        } else {
-          this.seconds = String(secs);
-        }
-        this.timer = setInterval(this.timerFn, 1000);
-      } else {
-        console.log("otp interval expired");
-        localStorage.removeItem("otp_sent_time");
-        localStorage.removeItem("user_email_or_phone");
-        localStorage.removeItem("show_captcha");
-      }
-    }
-  }
-
-  loadLanguagesWithConfig() {
-    this.mandatoryLanguages = Utils.getMandatoryLangs(this.configService);
-    this.optionalLanguages = Utils.getOptionalLangs(this.configService);
-    this.minLanguage = Utils.getMinLangs(this.configService);
-    this.maxLanguage = Utils.getMaxLangs(this.configService);
-    this.languageSelectionArray = [
-      ...this.mandatoryLanguages,
-      ...this.optionalLanguages,
-    ];
-    this.maxLanguage == 1
-      ? (this.showLanguageDropDown = false)
-      : (this.showLanguageDropDown = true);
-    localStorage.setItem(
-      "availableLanguages",
-      JSON.stringify(this.languageSelectionArray)
-    );
-    this.languageSelectionArray.forEach(async (language) => {
-      let localeId = language.substring(0, 2);
-      if (this.LanguageCodelabels[language]) {
-        localeId = this.LanguageCodelabels[language].locale;
-        if (localeId && localeId.indexOf("_") != -1) {
-          localeId = localeId.split("_")[0];
-        }
-        if (localeId) {
-          if (localStorage.getItem(localeId) == null) {
-            console.log(`importing localeId: ${localeId}`);
-            await Utils.localeInitializer(localeId);
-          }
-        }
-      }
-    });
-    this.prepareDropdownLabelArray();
-  }
-
-  prepareDropdownLabelArray() {
-    this.languageSelectionArray.forEach((language) => {
-      let codevalue = {
-        code: language,
-        value: this.LanguageCodelabels[language].nativeName,
-        locale: this.LanguageCodelabels[language].locale,
-      };
-      this.languageCodeValue.push(codevalue);
-    });
-    localStorage.setItem(
-      appConstants.LANGUAGE_CODE_VALUES,
-      JSON.stringify(this.languageCodeValue)
-    );
-  }
-
-  isCaptchaEnabled() {
-    if (
-      this.configService.getConfigByKey(
-        "mosip.preregistration.captcha.enable"
-      ) === "false" ||
-      this.configService.getConfigByKey(
-        "mosip.preregistration.captcha.enable"
-      ) === undefined
-    ) {
-      this.enableCaptcha = false;
-    } else if (
-      this.configService.getConfigByKey(
-        "mosip.preregistration.captcha.enable"
-      ) === "true"
-    ) {
-      this.enableCaptcha = true;
-      this.loadRecaptchaSiteKey();
-    }
-    if (!this.enableCaptcha) {
-      this.enableSendOtp = true;
-    }
-  }
-
-  loadRecaptchaSiteKey() {
-    this.siteKey = this.configService.getConfigByKey(
-      "mosip.preregistration.captcha.sitekey"
-    );
   }
 
   loadValidationMessages() {
-    this.dataService
-      .getI18NLanguageFiles(localStorage.getItem("langCode"))
-      .subscribe((response) => {
-        this.Languagelabels = response;
-        this.validationMessages = this.Languagelabels["login"];
-      });
-  }
-
-  setLanguageDirection(userSelectedLanguage) {
-    const ltrLangs = this.configService
-      .getConfigByKey(appConstants.CONFIG_KEYS.mosip_left_to_right_orientation)
-      .split(",");
-    if (ltrLangs.includes(userSelectedLanguage)) {
-      this.dir = "ltr";
-    } else {
-      this.dir = "rtl";
-    }
-    localStorage.setItem("dir", this.dir);
-  }
-
-  setTimer() {
-    const time = Number(
-      this.configService.getConfigByKey(
-        appConstants.CONFIG_KEYS.mosip_kernel_otp_expiry_time
-      )
-    );
-
-    if (!isNaN(time)) {
-      const minutes = time / 60;
-      const seconds = time % 60;
-      if (minutes < 10) {
-        this.minutes = "0" + minutes;
-      } else {
-        this.minutes = String(minutes);
-      }
-      if (seconds < 10) {
-        this.seconds = "0" + seconds;
-      } else {
-        this.seconds = String(seconds);
-      }
-    } else {
-      this.minutes = "02";
-      this.seconds = "00";
-    }
-  }
-
-  changeLanguage(): void {
-    this.setLanguageDirection(this.selectedLanguage);
-    this.authService.userPreferredLang = this.selectedLanguage;
-    this.userPreferredLanguage = this.selectedLanguage;
-    localStorage.setItem("userPrefLanguage", this.selectedLanguage);
-    localStorage.setItem("langCode", this.selectedLanguage);
-    this.translate.use(this.userPreferredLanguage);
-    this.router.navigate([this.userPreferredLanguage]);
-    this.loadValidationMessages();
-    this.errorMessage = "";
-  }
-
-  showVerifyBtn() {
-    if (
-      this.inputOTP.length ===
-      Number(
-        this.configService.getConfigByKey(
-          appConstants.CONFIG_KEYS.mosip_kernel_otp_default_length
-        )
-      )
-    ) {
-      this.errorMessage = "";
-      this.showVerify = true;
-      //this.showResend = false;
-    } else {
-      //this.showResend = false;
-      this.showVerify = false;
-    }
-  }
-
-  verifyInput() {
-    //this.loginIdValidator();
-    this.errorMessage ="";
-  }
-
-  timerFn = () => {
-    let secValue,
-      minValue = 0;
-    if (
-      document.getElementById("timer") && 
-      document.getElementById("timer").style.visibility == "visible" && 
-      document.getElementById("secondsSpan") &&
-      document.getElementById("secondsSpan").innerText &&
-      document.getElementById("minutesSpan") &&
-      document.getElementById("minutesSpan").innerText
-    ) {
-      secValue = Number(document.getElementById("secondsSpan").innerText);
-      minValue = Number(document.getElementById("minutesSpan").innerText);
-    } else {
-      secValue = Number(this.seconds);
-      minValue = Number(this.minutes);
-      if (document.getElementById("timer")) {
-        document.getElementById("timer").style.visibility = "visible";
-      }
-    }
-    if (secValue === 0) {
-      secValue = 60;
-      if (minValue === 0) {
-        // console.log("redirecting to initial phase on completion of timer");
-        // redirecting to initial phase on completion of timer
-        this.showContactDetails = true;
-        this.showSendOTP = true;
-        //this.showResend = true;
-        this.showOTP = false;
-        this.showVerify = false;
-        this.enableSendOtp = true;
-        if (this.enableCaptcha) {
-          this.showCaptcha = true;
-          this.enableSendOtp = false;
-        }
-        if (document.getElementById("minutesSpan")) {
-          document.getElementById("minutesSpan").innerText = this.minutes;
-        }
-        if (document.getElementById("timer")) {
-          document.getElementById("timer").style.visibility = "hidden";
-        }
-        clearInterval(this.timer);
-        return;
-      }
-      if (document.getElementById("minutesSpan") &&
-        document.getElementById("minutesSpan").innerText) {
-        document.getElementById("minutesSpan").innerText = "0" + (minValue - 1);
-      }
-    }
-    if (document.getElementById("secondsSpan") &&
-      document.getElementById("secondsSpan").innerText) {
-      if (secValue === 10 || secValue < 10) {
-        document.getElementById("secondsSpan").innerText = "0" + --secValue;
-      } else {
-        document.getElementById("secondsSpan").innerText = --secValue + "";
-      }
-    }
-  };
-
-  submit() {
-    this.loginIdValidator();
-    this.resetCaptcha = false;
-    if (
-      (this.showSendOTP || this.showResend) &&
-      this.errorMessage == "" &&
-      this.enableSendOtp
-    ) {
-      this.loadingMessage = this.validationMessages["loading"];
-      this.dataService
-        .sendOtpWithCaptcha(
-          this.inputContactDetails,
-          this.userPreferredLanguage,
-          this.captchaToken
-        )
-        .subscribe(
-          (response) => {
-            this.loadingMessage = "";
-            if (!response["errors"]) {
-              let otpSentTime = response["responsetime"];
-              localStorage.setItem("otp_sent_time", String(otpSentTime));
-              localStorage.setItem(
-                "user_email_or_phone",
-                this.inputContactDetails
-              );
-              this.errorMessage = undefined;
-              this.inputOTP = "";
-              //this.showResend = false;
-              this.showOTP = true;
-              this.showSendOTP = false;
-              this.showContactDetails = false;
-              localStorage.setItem("show_captcha", JSON.stringify(false));
-              this.showCaptcha = false;
-              // initial set up for timer
-              // console.log("setting timer");
-              this.setTimer();
-              if (document.getElementById("timer")) {
-                document.getElementById("timer").style.visibility = "visible";
-              }
-              if (document.getElementById("secondsSpan")) {
-                document.getElementById("secondsSpan").innerText = this.seconds;
-              }
-              if (document.getElementById("minutesSpan")) {
-                document.getElementById("minutesSpan").innerText = this.minutes;
-              }
-              this.timer = setInterval(this.timerFn, 1000);
-            } 
-          },
-          (error) => {
-            clearInterval(this.timer);
-            //console.log(error);
-            if (this.enableCaptcha){
-              //this.inputContactDetails = "";
-              this.resetCaptcha = true;
-              this.captchaToken = null;
-              this.enableSendOtp = false;  
-              console.log("Resetting captcha:" + this.resetCaptcha);
-            }
-            this.loadingMessage = "";
-            const otpFailedToSendMsg = this.validationMessages["serverUnavailable"];
-            this.showErrorMessage(error, otpFailedToSendMsg);
-          }
-        );
-      // dynamic update of button text for Resend and Verify
-    } else if (this.showVerify && this.errorMessage == "") {
-      this.disableVerify = true;
-      this.dataService
-        .verifyOtp(this.inputContactDetails, this.inputOTP)
-        .subscribe(
-          (response) => {
-            if (!response[appConstants.NESTED_ERROR]) {
-              clearInterval(this.timer);
-              localStorage.setItem("loggedIn", "true");
-              this.authService.setToken();
-              this.regService.setLoginId(this.inputContactDetails);
-              localStorage.setItem("loginId", this.inputContactDetails);
-              this.disableVerify = false;
-              this.router.navigate([this.userPreferredLanguage, "dashboard"]);
-            } 
-          },
-          (error) => {
-            //console.log(error);
-            this.inputOTP = "";
-            this.disableVerify = false;
-            this.showVerify = false;
-            let optInvalidMsg = this.Languagelabels["message"]["login"]["msg3"];
-            this.showErrorMessage(error, optInvalidMsg);
-          }
-        );
-    }
+    let factory = new LanguageFactory(localStorage.getItem("langCode"));
+    let response = factory.getCurrentlanguage();
+    this.validationMessages = response["login"];
   }
 
   loginIdValidator() {
     this.errorMessage = "";
-
     const modes = this.configService.getConfigByKey(
       appConstants.CONFIG_KEYS.mosip_login_mode
     );
@@ -549,6 +119,308 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  loadConfigs() {
+    this.dataService.getConfig().subscribe(
+      (response) => {
+        this.configService.setConfig(response);
+        this.setTimer();
+        this.loadLanguagesWithConfig();
+        this.isCaptchaEnabled();
+      },
+      (error) => {
+        this.showErrorMessage();
+      }
+    );
+  }
+
+  isCaptchaEnabled() {
+    if (
+      this.configService.getConfigByKey(
+        "mosip.preregistration.captcha.enable"
+      ) === "false" ||
+      this.configService.getConfigByKey(
+        "mosip.preregistration.captcha.enable"
+      ) === undefined
+    ) {
+      this.enableCaptcha = false;
+    } else if (
+      this.configService.getConfigByKey(
+        "mosip.preregistration.captcha.enable"
+      ) === "true"
+    ) {
+      this.enableCaptcha = true;
+      this.loadRecaptchaSiteKey();
+    }
+    if (!this.enableCaptcha) {
+      this.enableSendOtp = true;
+    }
+  }
+
+  loadRecaptchaSiteKey() {
+    this.siteKey = this.configService.getConfigByKey(
+      "mosip.preregistration.captcha.site.key"
+    );
+  }
+
+  loadLanguagesWithConfig() {
+    this.primaryLangFromConfig = this.configService.getConfigByKey(
+      appConstants.CONFIG_KEYS.mosip_primary_language
+    );
+    this.secondaryLangFromConfig = this.configService.getConfigByKey(
+      appConstants.CONFIG_KEYS.mosip_secondary_language
+    );
+    if (
+      !this.primaryLangFromConfig ||
+      !this.secondaryLangFromConfig ||
+      this.primaryLangFromConfig === "" ||
+      this.secondaryLangFromConfig === ""
+    ) {
+      const message = {
+        case: "MESSAGE",
+        message: this.LANGUAGE_ERROR_TEXT,
+      };
+      this.dialog.open(DialougComponent, {
+        width: "350px",
+        data: message,
+        disableClose: true,
+      });
+    }
+
+    this.primaryLang = this.primaryLangFromConfig;
+    this.secondaryLang = this.secondaryLangFromConfig;
+
+    this.setLanguageDirection(
+      this.primaryLangFromConfig,
+      this.secondaryLangFromConfig
+    );
+    localStorage.setItem("langCode", this.primaryLangFromConfig);
+    localStorage.setItem("secondaryLangCode", this.secondaryLangFromConfig);
+    this.translate.use(this.primaryLang);
+    this.selectedLanguage =
+      appConstants.languageMapping[this.primaryLang].langName;
+    if (
+      appConstants.languageMapping[this.primaryLangFromConfig] &&
+      appConstants.languageMapping[this.secondaryLangFromConfig]
+    ) {
+      this.languages.push(
+        appConstants.languageMapping[this.primaryLangFromConfig].langName
+      );
+      if (this.primaryLang !== this.secondaryLang) {
+        this.languages.push(
+          appConstants.languageMapping[this.secondaryLangFromConfig].langName
+        );
+      }
+    }
+    this.translate.addLangs([
+      this.primaryLangFromConfig,
+      this.secondaryLangFromConfig,
+    ]);
+    this.showSpinner = false;
+    this.loadValidationMessages();
+  }
+
+  setLanguageDirection(primaryLang: string, secondaryLang: string) {
+    const ltrLangs = this.configService
+      .getConfigByKey(appConstants.CONFIG_KEYS.mosip_left_to_right_orientation)
+      .split(",");
+    if (ltrLangs.includes(primaryLang)) {
+      this.dir = "ltr";
+    } else {
+      this.dir = "rtl";
+    }
+    if (ltrLangs.includes(secondaryLang)) {
+      this.secondaryDir = "ltr";
+    } else {
+      this.secondaryDir = "rtl";
+    }
+    localStorage.setItem("dir", this.dir);
+    localStorage.setItem("secondaryDir", this.secondaryDir);
+    this.textDir = localStorage.getItem("dir");
+  }
+
+  setTimer() {
+    const time = Number(
+      this.configService.getConfigByKey(
+        appConstants.CONFIG_KEYS.mosip_kernel_otp_expiry_time
+      )
+    );
+    if (!isNaN(time)) {
+      const minutes = time / 60;
+      const seconds = time % 60;
+      if (minutes < 10) {
+        this.minutes = "0" + minutes;
+      } else {
+        this.minutes = String(minutes);
+      }
+      if (seconds < 10) {
+        this.seconds = "0" + seconds;
+      } else {
+        this.seconds = String(seconds);
+      }
+    } else {
+      this.minutes = "02";
+      this.seconds = "00";
+    }
+  }
+
+  changeLanguage(): void {
+    if (
+      this.selectedLanguage !==
+      appConstants.languageMapping[this.primaryLangFromConfig].langName
+    ) {
+      this.secondaryLang = this.configService.getConfigByKey(
+        appConstants.CONFIG_KEYS.mosip_primary_language
+      );
+      this.primaryLang = this.configService.getConfigByKey(
+        appConstants.CONFIG_KEYS.mosip_secondary_language
+      );
+      this.setLanguageDirection(this.primaryLang, this.secondaryLang);
+      this.authService.primaryLang = this.primaryLang;
+      localStorage.setItem("langCode", this.primaryLang);
+      localStorage.setItem("secondaryLangCode", this.secondaryLang);
+      this.router.navigate([localStorage.getItem("langCode")]);
+    } else {
+      this.primaryLang = this.configService.getConfigByKey(
+        appConstants.CONFIG_KEYS.mosip_primary_language
+      );
+      this.secondaryLang = this.configService.getConfigByKey(
+        appConstants.CONFIG_KEYS.mosip_secondary_language
+      );
+      this.authService.primaryLang = this.primaryLang;
+      this.setLanguageDirection(this.primaryLang, this.secondaryLang);
+      localStorage.setItem("langCode", this.primaryLang);
+      localStorage.setItem("secondaryLangCode", this.secondaryLang);
+      this.router.navigate([localStorage.getItem("langCode")]);
+    }
+    this.translate.use(localStorage.getItem("langCode"));
+    this.loadValidationMessages();
+  }
+
+  showVerifyBtn() {
+    if (
+      this.inputOTP.length ===
+      Number(
+        this.configService.getConfigByKey(
+          appConstants.CONFIG_KEYS.mosip_kernel_otp_default_length
+        )
+      )
+    ) {
+      this.showVerify = true;
+      this.showResend = false;
+    } else {
+      this.showResend = true;
+      this.showVerify = false;
+    }
+  }
+
+  submit(): void {
+    this.loginIdValidator();
+    this.resetCaptcha = false;
+    if (
+      (this.showSendOTP || this.showResend) &&
+      this.errorMessage == "" &&
+      this.enableSendOtp
+    ) {
+      console.log("test");
+      this.inputOTP = "";
+      this.showResend = true;
+      this.showOTP = true;
+      this.showSendOTP = false;
+      this.showContactDetails = false;
+      this.showCaptcha = false;
+      const timerFn = () => {
+        let secValue = Number(document.getElementById("secondsSpan").innerText);
+        const minValue = Number(
+          document.getElementById("minutesSpan").innerText
+        );
+
+        if (secValue === 0) {
+          secValue = 60;
+          if (minValue === 0) {
+            // redirecting to initial phase on completion of timer
+            this.showContactDetails = true;
+            this.showSendOTP = true;
+            this.showResend = false;
+            this.showOTP = false;
+            this.showVerify = false;
+            if (this.enableCaptcha) {
+              this.showCaptcha = true;
+              this.enableSendOtp = false;
+            }
+            document.getElementById("minutesSpan").innerText = this.minutes;
+            document.getElementById("timer").style.visibility = "hidden";
+            clearInterval(this.timer);
+            return;
+          }
+          document.getElementById("minutesSpan").innerText =
+            "0" + (minValue - 1);
+        }
+
+        if (secValue === 10 || secValue < 10) {
+          document.getElementById("secondsSpan").innerText = "0" + --secValue;
+        } else {
+          document.getElementById("secondsSpan").innerText = --secValue + "";
+        }
+      };
+
+      // update of timer value on click of resend
+      if (document.getElementById("timer").style.visibility === "visible") {
+        document.getElementById("secondsSpan").innerText = this.seconds;
+        document.getElementById("minutesSpan").innerText = this.minutes;
+      } else {
+        // initial set up for timer
+        document.getElementById("timer").style.visibility = "visible";
+        this.timer = setInterval(timerFn, 1000);
+      }
+      this.dataService
+      .sendOtpWithCaptcha(
+        this.inputContactDetails,
+        localStorage.getItem("langCode"),
+        this.captchaToken
+      )
+      .subscribe(
+        (response) => {
+         
+        },
+        (error) => {
+          if (this.enableCaptcha) {
+            this.resetCaptcha = true;
+            this.captchaToken = null;
+            this.enableSendOtp = false;
+            console.log("Resetting captcha:" + this.resetCaptcha);
+          }
+        }
+      );
+     
+
+      // dynamic update of button text for Resend and Verify
+    } else if (this.showVerify && this.errorMessage === "") {
+      this.disableVerify = true;
+      this.dataService
+        .verifyOtp(this.inputContactDetails, this.inputOTP)
+        .subscribe(
+          (response) => {
+            if (!response["errors"]) {
+              clearInterval(this.timer);
+              localStorage.setItem("loggedIn", "true");
+              this.authService.setToken();
+              this.regService.setLoginId(this.inputContactDetails);
+              localStorage.setItem("loginId", this.inputContactDetails);
+              this.disableVerify = false;
+              this.router.navigate([this.primaryLang, "dashboard"]);
+            } else {
+              this.disableVerify = false;
+              this.showOtpMessage();
+            }
+          },
+          (error) => {
+            this.disableVerify = false;
+            this.showErrorMessage();
+          }
+        );
+    }
+  }
+
   getCaptchaToken(event: Event) {
     if (event !== undefined && event != null) {
       console.log("Captcha event " + event);
@@ -562,45 +434,30 @@ export class LoginComponent implements OnInit {
 
   showOtpMessage() {
     this.inputOTP = "";
-    let response = this.Languagelabels;
-    //console.log(response);
+    let factory = new LanguageFactory(localStorage.getItem("langCode"));
+    let response = factory.getCurrentlanguage();
     let otpmessage = response["message"]["login"]["msg3"];
     const message = {
       case: "MESSAGE",
       message: otpmessage,
     };
     this.dialog.open(DialougComponent, {
-      width: "400px",
+      width: "350px",
       data: message,
     });
   }
 
-  /**
-   * @description This is a dialoug box whenever an error comes from the server, it will appear.
-   *
-   * @private
-   * @memberof DemographicComponent
-   */
-   private showErrorMessage(error: any, customMsg?: string) {
-    let errorlabels = this.Languagelabels[appConstants.ERROR];
-    let apiErrorCodes = this.Languagelabels[appConstants.API_ERROR_CODES];
-    const titleOnError = errorlabels.errorLabel;
-    const errorCode = Utils.getErrorCode(error);
-    let message = "";
-    if (apiErrorCodes[errorCode]) {
-      message = apiErrorCodes[errorCode];
-    } else {
-      message = customMsg; 
-    }
-    const body = {
-      case: "ERROR",
-      title: titleOnError,
-      message: message,
-      yesButtonText: errorlabels.button_ok,
+  showErrorMessage() {
+    let factory = new LanguageFactory(localStorage.getItem("langCode"));
+    let response = factory.getCurrentlanguage();
+    let errormessage = response["error"]["error"];
+    const message = {
+      case: "MESSAGE",
+      message: errormessage,
     };
     this.dialog.open(DialougComponent, {
-      width: "400px",
-      data: body,
+      width: "350px",
+      data: message,
     });
   }
 }
